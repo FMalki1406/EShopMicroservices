@@ -17,6 +17,19 @@ public class CatalogInitialData : IInitialData
 
     private static IEnumerable<Product> GetPreconfiguredProducts()
     {
-        throw new NotImplementedException();
+        var products = new List<Product>
+        {
+            new Product()
+            {
+                Id = Guid.NewGuid(),
+                Name = "IPhone 16",
+                Description = "some description",
+                ImageFile = "produc1.png",
+                Price = 950.00M,
+                Category = new List<string>{"Smart Phone"}
+            }
+        };
+
+        return products;
     }
 }

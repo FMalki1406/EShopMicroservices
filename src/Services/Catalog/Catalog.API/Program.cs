@@ -1,7 +1,12 @@
 using Catalog.API.Data;
+using HealthChecks.UI.Client;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 var assembly = typeof(Program).Assembly;
+var connectionString = builder.Configuration.GetConnectionString("Database");
+if (connectionString is null)
+    throw new DirectoryNotFoundException(connectionString);
 // add services
 builder.Services.AddMediatR(config =>
 {
@@ -16,7 +21,7 @@ builder.Services.AddCarter();
 
 builder.Services.AddMarten(opt =>
 {
-    opt.Connection(builder.Configuration.GetConnectionString("Database")!);
+    opt.Connection(connectionString);
 }).UseLightweightSessions();
 
 if (builder.Environment.IsDevelopment())
@@ -24,10 +29,19 @@ if (builder.Environment.IsDevelopment())
 
 builder.Services.AddExceptionHandler<CustomExceptionHandler>();
 
+builder.Services.AddHealthChecks()
+    .AddNpgSql(connectionString);
+
 var app = builder.Build();
 
 // configure Http request pipline
 app.MapCarter();
 app.UseExceptionHandler(option => { });
+
+app.UseHealthChecks("/health",
+    new HealthCheckOptions
+    {
+        ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse,
+    });
 
 app.Run();
